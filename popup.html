@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>白名单管理</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="header">
+        <div class="title">豆包浏览器-白名单小助手</div>
+        <label class="switch">
+          <input id="enabled" type="checkbox" />
+          <span class="label">启用</span>
+        </label>
+      </div>
+
+      <!-- Tab 1: Whitelist -->
+      <div class="tab-content active" id="tab-whitelist">
+        <div class="section">
+          <div class="sectionTitle">添加域名</div>
+          <div class="row">
+            <input
+              id="domainInput"
+              class="input"
+              type="text"
+              placeholder="例如：claude.ai"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="addBtn" class="btn">添加</button>
+          </div>
+          <div id="status" class="status" aria-live="polite"></div>
+        </div>
+
+        <div class="section listSection">
+          <div class="row">
+            <div class="sectionTitle">白名单</div>
+            <input
+              id="searchFilter"
+              class="input search-input"
+              type="text"
+              placeholder="搜索..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+          <div id="list" class="list"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Advanced (Backups & Last Blocked) -->
+      <div class="tab-content" id="tab-advanced">
+        <!-- Group 1: Last Blocked -->
+        <div class="section">
+          <div class="sectionTitle">最近拦截</div>
+          <div id="lastBlockedList" class="list"></div>
+        </div>
+
+        <!-- Group 2: Backups (Flex Grow) -->
+        <div class="section backup-section">
+          <div class="row">
+            <div class="sectionTitle">备份管理</div>
+            <button id="importBtn" class="btn small" title="从文件导入域名到白名单">导入</button>
+          </div>
+          <div class="row" style="margin-bottom: 8px">
+            <input
+              id="backupNameInput"
+              class="input"
+              type="text"
+              placeholder="备份名称..."
+              autocomplete="off"
+            />
+            <button id="createBackupBtn" class="btn">创建</button>
+          </div>
+          <div id="backupList" class="list"></div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Settings -->
+      <div class="tab-content" id="tab-settings">
+        <!-- Group 1: General Settings -->
+        <div class="section">
+          <div class="sectionTitle">通用设置</div>
+
+          <div class="row" style="margin-bottom: 12px">
+            <span class="label">自动关闭标签</span>
+            <label class="switch">
+              <input id="closeTabAfterRedirect" type="checkbox" />
+            </label>
+          </div>
+
+          <div class="row">
+            <span class="label">主题模式</span>
+            <select id="themeMode" class="select" style="width: 100px">
+              <option value="system">跟随系统</option>
+              <option value="light">浅色</option>
+              <option value="dark">深色</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Group 2: Danger (Bottom) -->
+        <div
+          class="section"
+          style="
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: auto;
+          "
+        >
+          <div class="row">
+            <span class="label" style="color: var(--danger)">重置所有数据</span>
+            <button
+              id="resetBtn"
+              class="btn secondary"
+              style="color: var(--danger); border-color: var(--danger)"
+            >
+              恢复默认
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup Editor Overlay -->
+      <div id="backupEditor" class="overlay" style="display: none">
+        <div class="overlay-content">
+          <div class="sectionTitle">编辑备份内容</div>
+          <textarea
+            id="backupEditorContent"
+            class="textarea"
+            rows="10"
+            spellcheck="false"
+          ></textarea>
+          <div class="row" style="justify-content: flex-end; margin-top: 12px">
+            <button id="backupEditorCancel" class="btn secondary">取消</button>
+            <button id="backupEditorSave" class="btn" style="margin-left: 8px">
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overflow Prompt Overlay -->
+      <div id="overflowPrompt" class="overlay" style="display: none">
+        <div class="overlay-content">
+          <div class="sectionTitle">备份数量已达上限 (3个)</div>
+          <div class="hint" style="margin-bottom: 16px">
+            需要删除最早的备份才能继续。
+          </div>
+          <div
+            id="overflowTargetName"
+            style="font-weight: bold; margin-bottom: 16px; font-size: 13px"
+          ></div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <button id="overflowDownloadDelete" class="btn">
+              下载到本地并删除
+            </button>
+            <button
+              id="overflowDelete"
+              class="btn"
+              style="color: var(--danger); border-color: var(--danger)"
+            >
+              直接删除
+            </button>
+            <button id="overflowCancel" class="btn secondary">取消</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compare Result Overlay -->
+      <div id="compareResult" class="overlay" style="display: none">
+        <div class="overlay-content" style="max-height: 80%">
+          <div class="sectionTitle">对比结果</div>
+
+          <div style="flex: 1; overflow-y: auto; margin: 12px 0">
+            <div
+              class="sectionTitle"
+              style="font-size: 11px; margin-bottom: 4px"
+            >
+              当前白名单缺失 (备份有):
+            </div>
+            <div
+              id="diffMissing"
+              class="status"
+              style="margin-bottom: 12px; color: var(--danger)"
+            ></div>
+
+            <div
+              class="sectionTitle"
+              style="font-size: 11px; margin-bottom: 4px"
+            >
+              当前白名单新增 (备份无):
+            </div>
+            <div
+              id="diffAdded"
+              class="status"
+              style="color: var(--focus-border)"
+            ></div>
+          </div>
+
+          <div class="row" style="justify-content: flex-end">
+            <button id="compareClose" class="btn">关闭</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Navigation -->
+      <div class="bottom-nav">
+        <button class="nav-item active" data-target="tab-whitelist">
+          <span class="icon">📝</span>
+          <span>白名单</span>
+        </button>
+        <button class="nav-item" data-target="tab-advanced">
+          <span class="icon">🚀</span>
+          <span>高级</span>
+        </button>
+        <button class="nav-item" data-target="tab-settings">
+          <span class="icon">⚙️</span>
+          <span>设置</span>
+        </button>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

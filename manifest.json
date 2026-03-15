@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "豆包浏览器-白名单小助手",
+  "version": "1.1.0",
+  "description": "自动将非白名单域名重定向至 Edge 浏览器打开",
+  "permissions": [
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "白名单管理"
+  }
+}
