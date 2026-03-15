@@ -55,12 +55,12 @@
    ```bash
    git clone https://github.com/GeeSeeker/doubao-edge-bridge.git
    ```
+
    或者直接点击 GitHub 页面右上角的 `Code` -> `Download ZIP` 并解压。
 
 2. **打开浏览器扩展管理页面**
 
-   - **Chrome / 豆包浏览器**：地址栏输入 `chrome://extensions/`
-   - **Edge**：地址栏输入 `edge://extensions/`
+   在豆包浏览器地址栏输入 `chrome://extensions/`
 
 3. **启用开发者模式**
 
@@ -81,6 +81,7 @@
 ### 默认白名单
 
 安装后，插件预置了以下常用域名：
+
 - `doubao.com`
 - `chatgpt.com`
 - `claude.ai`
